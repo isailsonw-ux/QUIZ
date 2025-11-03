@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz: Dominando o MS Word</title>
+    <!-- Carregando o Tailwind CSS para um visual moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Fonte personalizada para um visual mais amigável */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Efeito de botão pressionado */
+        .btn-answer:active {
+            transform: scale(0.98);
+        }
+        /* Classes para feedback visual */
+        .correct {
+            background-color: #84cc16 !important; /* lime-500 */
+            color: #000000 !important; /* Texto preto para melhor contraste */
+            border-color: #65a30d !important; /* lime-700 */
+        }
+        .incorrect {
+            background-color: #ef4444 !important; /* red-500 */
+            color: white !important;
+            border-color: #b91c1c !important; /* red-700 */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="bg-gray-800 w-full max-w-2xl p-6 sm:p-8 rounded-2xl shadow-2xl shadow-lime-500/20 transition-all duration-300">
+        
+        <!-- Logo Jumper -->
+        <div class="flex justify-center mb-4">
+            <img src="https://i.postimg.cc/m2Qyr8L7/LOGO-J-BRANCA-E-VERDE.png" alt="Logo Jumper" class="h-16 w-auto"
+                 onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');">
+            <!-- Fallback em texto caso a imagem falhe -->
+            <div id="logo-fallback" class="hidden text-lime-400 text-2xl font-bold">JUMPER</div>
+        </div>
+
+        <!-- Cabeçalho do Quiz -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-center text-lime-400">Quiz Rápido: MS Word 🚀</h1>
+            <p class="text-center text-gray-300 mt-2">Teste seus conhecimentos na ferramenta de texto mais usada!</p>
+        </div>
+
+        <!-- Área da Pergunta -->
+        <div id="question-area" class="mb-6">
+            <h2 id="question-text" class="text-2xl font-semibold text-white mb-6 min-h-[60px]">Carregando pergunta...</h2>
+            <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Botões de resposta serão inseridos aqui pelo JavaScript -->
+            </div>
+        </div>
+
+        <!-- Controles de Navegação -->
+        <div class="mt-8 flex justify-between items-center">
+            <span id="question-counter" class="text-sm font-semibold text-gray-400"></span>
+            <button id="next-btn" class="hidden bg-lime-500 text-black font-bold py-3 px-6 rounded-lg shadow-md hover:bg-lime-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-lime-400 focus:ring-opacity-50">
+                Próxima &rarr;
+            </button>
+        </div>
+
+        <!-- Tela de Resultados (Inicialmente Oculta) -->
+        <div id="results-area" class="hidden text-center">
+            <h2 id="results-title" class="text-3xl font-bold text-lime-400 mb-4">Quiz Concluído!</h2>
+            <p id="results-text" class="text-xl text-gray-200 mb-6">Você acertou X de Y perguntas.</p>
+            <img id="results-image" src="https://placehold.co/300x200/000000/84CC16?text=Parab%C3%A9ns!" alt="Imagem de comemoração" class="mx-auto rounded-lg mb-6">
+            <button id="restart-btn" class="bg-lime-500 text-black font-bold py-3 px-8 rounded-lg shadow-md hover:bg-lime-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-lime-400 focus:ring-opacity-50">
+                Tentar Novamente
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 1. DEFINIÇÃO DAS PERGUNTAS ---
+        const questions = [
+            // Bloco 1: Básico e Atalhos Comuns
+            {
+                question: "Qual atalho de teclado você usa para SALVAR um documento?",
+                answers: [
+                    { text: "Ctrl + C (Copiar)", correct: false },
+                    { text: "Ctrl + S (Salvar)", correct: true }, // Também Ctrl+G em PT-BR
+                    { text: "Ctrl + B (Negrito)", correct: false },
+                    { text: "Alt + F4 (Fechar)", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve o botão 'N' (ou 'B' em inglês) na barra de formatação?",
+                answers: [
+                    { text: "Deixar a letra 'N'ormal", correct: false },
+                    { text: "Inserir um 'N'ovo parágrafo", correct: false },
+                    { text: "Deixar o texto em Negrito", correct: true },
+                    { text: "Aumentar o zoom do documento", correct: false }
+                ]
+            },
+            {
+                question: "O atalho 'Ctrl + C' é usado para...",
+                answers: [
+                    { text: "Colar um texto", correct: false },
+                    { text: "Recortar um texto", correct: false },
+                    { text: "Copiar um texto", correct: true },
+                    { text: "Criar um novo documento", correct: false }
+                ]
+            },
+            {
+                question: "E para 'COLAR' o texto que você copiou, qual atalho você usa?",
+                answers: [
+                    { text: "Ctrl + V", correct: true },
+                    { text: "Ctrl + P", correct: false },
+                    { text: "Ctrl + X", correct: false },
+                    { text: "Ctrl + L", correct: false }
+                ]
+            },
+            {
+                question: "Qual atalho seleciona TUDO o que está no documento?",
+                answers: [
+                    { text: "Ctrl + T", correct: true },
+                    { text: "Ctrl + A (Inglês)", correct: false }, // Nota: Ctrl+A é comum, mas Ctrl+T é o padrão PT-BR
+                    { text: "Alt + T", correct: false },
+                    { text: "Shift + Enter", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve o atalho 'Ctrl + Z'?",
+                answers: [
+                    { text: "Refazer a última ação", correct: false },
+                    { text: "Desfazer a última ação", correct: true },
+                    { text: "Abrir a janela de Zoom", correct: false },
+                    { text: "Salvar como PDF", correct: false }
+                ]
+            },
+            {
+                question: "E o atalho 'Ctrl + Y' (ou Ctrl+R em PT-BR)?",
+                answers: [
+                    { text: "Desfazer a última ação", correct: false },
+                    { text: "Abrir a janela de Impressão", correct: false },
+                    { text: "Refazer o que foi desfeito", correct: true },
+                    { text: "Recortar o texto", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve o botão 'I' (Itálico)?",
+                answers: [
+                    { text: "Inserir uma Imagem", correct: false },
+                    { text: "Deixar a letra 'I'nvisível", correct: false },
+                    { text: "Deixar o texto 'I'nclinado (Itálico)", correct: true },
+                    { text: "Aumentar a fonte", correct: false }
+                ]
+            },
+            {
+                question: "O botão 'S' (ou 'U' em inglês) com uma linha embaixo faz o quê?",
+                answers: [
+                    { text: "Salva o documento", correct: false },
+                    { text: "Substitui uma palavra", correct: false },
+                    { text: "Coloca o texto em 'S'ombra", correct: false },
+                    { text: "Aplica 'S'ublinhado ao texto", correct: true }
+                ]
+            },
+            {
+                question: "Qual atalho abre a janela 'Localizar' (para procurar palavras)?",
+                answers: [
+                    { text: "Ctrl + L", correct: true }, // Ctrl+F em Inglês
+                    { text: "Ctrl + P", correct: false },
+                    { text: "Ctrl + A", correct: false },
+                    { text: "Ctrl + S", correct: false }
+                ]
+            },
+
+            // Bloco 2: Formatação de Parágrafo e Página
+            {
+                question: "O que acontece quando você clica na opção de alinhamento 'Justificar'?",
+                answers: [
+                    { text: "O texto fica todo alinhado à esquerda", correct: false },
+                    { text: "O texto fica todo alinhado à direita", correct: false },
+                    { text: "O texto fica centralizado na página", correct: false },
+                    { text: "O texto se alinha perfeitamente nas margens esquerda e direita", correct: true }
+                ]
+            },
+            {
+                question: "Na Guia 'Layout', o que você pode alterar?",
+                answers: [
+                    { text: "As margens, orientação (retrato/paisagem) e colunas", correct: true },
+                    { text: "O tipo da fonte (Arial, Times New Roman...)", correct: false },
+                    { text: "Adicionar um vídeo do YouTube", correct: false },
+                    { text: "Procurar uma palavra no texto", correct: false }
+                ]
+            },
+            {
+                question: "O que é a 'Orientação da Página'?",
+                answers: [
+                    { text: "Onde o texto começa na página", correct: false },
+                    { text: "A direção que você lê (esquerda-direita)", correct: false },
+                    { text: "Se a página fica 'em pé' (Retrato) ou 'deitada' (Paisagem)", correct: true },
+                    { text: "O zoom do documento", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve a ferramenta 'Pincel de Formatação'?",
+                answers: [
+                    { text: "Para desenhar na tela", correct: false },
+                    { text: "Para copiar APENAS a formatação (fonte, cor, tamanho) de um texto para outro", correct: true },
+                    { text: "Para limpar todo o texto", correct: false },
+                    { text: "Para pintar o fundo da página", correct: false }
+                ]
+            },
+            {
+                question: "O que é 'Espaçamento entre Linhas'?",
+                answers: [
+                    { text: "O tamanho da margem", correct: false },
+                    { text: "A distância entre as letras", correct: false },
+                    { text: "A distância (altura) entre uma linha de texto e outra", correct: true },
+                    { text: "O espaço entre as palavras", correct: false }
+                ]
+            },
+            {
+                question: "Como você inicia uma lista com marcadores (bolinhas)?",
+                answers: [
+                    { text: "Digitando '1.' e espaço", correct: false },
+                    { text: "Clicando no botão com bolinhas na Guia 'Página Inicial'", correct: true },
+                    { text: "Na Guia 'Inserir' > 'Lista'", correct: false },
+                    { text: "Usando Ctrl + M", correct: false }
+                ]
+            },
+            {
+                question: "E se você quiser uma lista numerada (1, 2, 3...)?",
+                answers: [
+                    { text: "Clicando no botão com números na Guia 'Página Inicial'", correct: true },
+                    { text: "Digitando '*' e espaço", correct: false },
+                    { text: "Na Guia 'Layout' > 'Numeração'", correct: false },
+                    { text: "Apertando a tecla Tab", correct: false }
+                ]
+            },
+            {
+                question: "O que é uma 'Quebra de Página' (Ctrl + Enter)?",
+                answers: [
+                    { text: "Um erro que quebra o Word", correct: false },
+                    { text: "Uma linha horizontal que divide o texto", correct: false },
+                    { text: "Força o texto seguinte a começar imediatamente em uma nova página", correct: true },
+                    { text: "Divide a página em duas colunas", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve a 'Régua' no Word?",
+                answers: [
+                    { text: "Medir o tamanho da tela", correct: false },
+                    { text: "Ajustar recuos de parágrafo, margens e paradas de tabulação", correct: true },
+                    { text: "Desenhar linhas retas", correct: false },
+                    { text: "Contar quantas linhas tem o texto", correct: false }
+                ]
+            },
+            {
+                question: "O que o atalho 'Ctrl + J' faz (ou 'Ctrl + E' em PT-BR)?",
+                answers: [
+                    { text: "Justifica o texto", correct: false },
+                    { text: "Alinha o texto à Esquerda", correct: false },
+                    { text: "Centraliza o texto", correct: true }, // 'E' de 'Entralizar' (Centralizar)
+                    { text: "Alinha o texto à Direita", correct: false }
+                ]
+            },
+
+            // Bloco 3: Inserir Objetos
+            {
+                question: "O que a Guia 'Inserir' permite que você faça?",
+                answers: [
+                    { text: "Mudar a cor da fonte", correct: false },
+                    { text: "Adicionar tabelas, imagens e formas", correct: true },
+                    { text: "Verificar a ortografia", correct: false },
+                    { text: "Mudar a orientação da página (retrato/paisagem)", correct: false }
+                ]
+            },
+            {
+                question: "Qual é a função do 'WordArt'?",
+                answers: [
+                    { text: "Criar textos com efeitos especiais e estilos artísticos", correct: true },
+                    { text: "Desenhar formas geométricas", correct: false },
+                    { text: "Contar as palavras do texto", correct: false },
+                    { text: "Traduzir o texto para outro idioma", correct: false }
+                ]
+            },
+            {
+                question: "O que é o 'Cabeçalho' em um documento do Word?",
+                answers: [
+                    { text: "O título principal do texto na primeira página", correct: false },
+                    { text: "Uma área no topo de cada página para informações repetidas (ex: nome, n° pág)", correct: true },
+                    { text: "A primeira linha de qualquer parágrafo", correct: false },
+                    { text: "O menu principal do Word (Arquivo, Página Inicial...)", correct: false }
+                ]
+            },
+            {
+                question: "O 'Rodapé' é similar ao Cabeçalho, mas fica...",
+                answers: [
+                    { text: "No meio da página", correct: false },
+                    { text: "Na margem esquerda", correct: false },
+                    { text: "Na parte de baixo (no 'pé') de cada página", correct: true },
+                    { text: "Apenas na última página", correct: false }
+                ]
+            },
+            {
+                question: "Como você adiciona uma Tabela ao seu documento?",
+                answers: [
+                    { text: "Guia 'Layout' > 'Tabela'", correct: false },
+                    { text: "Guia 'Inserir' > 'Tabela'", correct: true },
+                    { text: "Guia 'Página Inicial' > 'Nova Tabela'", correct: false },
+                    { text: "Desenhando com o mouse", correct: false } // Embora possível, a guia é o caminho principal
+                ]
+            },
+            {
+                question: "Para que serve a opção 'Quebra de Texto Automática' (ou 'Disposição do Texto') em uma imagem?",
+                answers: [
+                    { text: "Para cortar a imagem", correct: false },
+                    { text: "Para girar a imagem", correct: false },
+                    { text: "Para definir como o texto se comporta AO REDOR da imagem (ex: 'Quadrado', 'Justo')", correct: true },
+                    { text: "Para diminuir a qualidade da imagem", correct: false }
+                ]
+            },
+            {
+                question: "O que é 'SmartArt'?",
+                answers: [
+                    { text: "Uma fonte mais inteligente", correct: false },
+                    { text: "Um corretor ortográfico avançado", correct: false },
+                    { text: "Uma ferramenta para criar diagramas e organogramas visualmente", correct: true },
+                    { text: "Um assistente virtual do Word", correct: false }
+                ]
+            },
+            {
+                question: "Para inserir um símbolo especial (como ©, ®, ™ ou ♥), você vai em:",
+                answers: [
+                    { text: "Guia 'Página Inicial' > 'Fonte'", correct: false },
+                    { text: "Guia 'Inserir' > 'Símbolo'", correct: true },
+                    { text: "Guia 'Layout' > 'Símbolo'", correct: false },
+                    { text: "Guia 'Revisão' > 'Símbolo'", correct: false }
+                ]
+            },
+            {
+                question: "Como você insere o número da página automaticamente?",
+                answers: [
+                    { text: "Digitando '1' no rodapé", correct: false },
+                    { text: "Guia 'Inserir' > 'Número de Página'", correct: true },
+                    { text: "Guia 'Layout' > 'Numeração'", correct: false },
+                    { text: "Guia 'Referências' > 'Contar Páginas'", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve um 'Hiperlink'?",
+                answers: [
+                    { text: "Para deixar o texto maior", correct: false },
+                    { text: "Para criar um link clicável que leva a um site ou outro arquivo", correct: true },
+                    { text: "Para conectar duas páginas do Word", correct: false },
+                    { text: "Para sublinhar o texto em azul", correct: false }
+                ]
+            },
+
+            // Bloco 4: Revisão e Visualização
+            {
+                question: "A linha ondulada vermelha que aparece embaixo de uma palavra significa...",
+                answers: [
+                    { text: "Que a palavra é muito importante", correct: false },
+                    { text: "Um possível erro de gramática (linha azul/verde)", correct: false },
+                    { text: "Um possível erro de ortografia (palavra 'errada')", correct: true },
+                    { text: "Que o computador está sem internet", correct: false }
+                ]
+            },
+            {
+                question: "E a linha ondulada azul (ou verde) significa...",
+                answers: [
+                    { text: "Um possível erro de ortografia", correct: false },
+                    { text: "Um possível erro de gramática (ex: concordância, espaçamento)", correct: true },
+                    { text: "Um hiperlink quebrado", correct: false },
+                    { text: "Que a palavra está em outro idioma", correct: false }
+                ]
+            },
+            {
+                question: "Qual atalho abre a janela de 'Impressão'?",
+                answers: [
+                    { text: "Ctrl + I", correct: false },
+                    { text: "Ctrl + P", correct: true },
+                    { text: "Ctrl + W", correct: false },
+                    { text: "Ctrl + O", correct: false }
+                ]
+            },
+            {
+                question: "O que faz a ferramenta 'Contar Palavras' na Guia 'Revisão'?",
+                answers: [
+                    { text: "Mostra quantas palavras, caracteres e parágrafos tem o documento", correct: true },
+                    { text: "Conta quantas vezes uma palavra específica aparece", correct: false },
+                    { text: "Conta o número de páginas", correct: false },
+                    { text: "Diz o significado das palavras", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve o 'Modo de Exibição de Leitura'?",
+                answers: [
+                    { text: "Para editar o texto mais rápido", correct: false },
+                    { text: "Para formatar a página para uma leitura mais confortável, como um livro", correct: true },
+                    { text: "Para imprimir o documento", correct: false },
+                    { text: "Para ver o código-fonte do documento", correct: false }
+                ]
+            },
+            {
+                question: "Qual é o 'Modo de Exibição de Layout de Impressão'?",
+                answers: [
+                    { text: "O modo que mostra como o documento ficará no celular", correct: false },
+                    { text: "O modo padrão, que mostra como o documento ficará quando for impresso", correct: true },
+                    { text: "O modo que esconde as imagens", correct: false },
+                    { text: "O modo de rascunho", correct: false }
+                ]
+            },
+            {
+                question: "O que são 'Comentários' (Guia Revisão)?",
+                answers: [
+                    { text: "Mensagens de erro do Word", correct: false },
+                    { text: "Notas e observações que você pode deixar na margem do documento", correct: true },
+                    { text: "O texto principal do documento", correct: false },
+                    { text: "Sinônimos de palavras", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve a ferramenta 'Controlar Alterações' (Track Changes)?",
+                answers: [
+                    { text: "Para controlar quem abre o arquivo", correct: false },
+                    { text: "Para registrar e marcar todas as edições (o que foi apagado/adicionado) no texto", correct: true },
+                    { text: "Para desfazer alterações (Ctrl+Z)", correct: false },
+                    { text: "Para travar o documento contra edições", correct: false }
+                ]
+            },
+            {
+                question: "Como você altera o Zoom (aproximar ou afastar) do documento?",
+                answers: [
+                    { text: "Usando o controle deslizante de zoom no canto inferior direito", correct: true },
+                    { text: "Apertando Ctrl + Seta para Cima", correct: false },
+                    { text: "Na Guia 'Inserir' > 'Zoom'", correct: false },
+                    { text: "Clicando duas vezes na página", correct: false }
+                ]
+            },
+            {
+                question: "O atalho 'Ctrl + X' faz o quê?",
+                answers: [
+                    { text: "Copia o texto", correct: false },
+                    { text: "Cola o texto", correct: false },
+                    { text: "Recorta (remove) o texto para colar em outro lugar", correct: true },
+                    { text: "Fecha o Word", correct: false }
+                ]
+            },
+
+            // Bloco 5: Avançado e Formatos
+            {
+                question: "Qual é o formato de arquivo padrão do MS Word (a partir de 2007)?",
+                answers: [
+                    { text: ".TXT", correct: false },
+                    { text: ".DOCX", correct: true },
+                    { text: ".PDF", correct: false },
+                    { text: ".DOC", correct: false } // (Este é o formato antigo)
+                ]
+            },
+            {
+                question: "O que acontece se você 'Salvar Como' > 'PDF'?",
+                answers: [
+                    { text: "O Word transforma o arquivo em uma imagem", correct: false },
+                    { text: "O Word cria uma versão 'fechada' do documento, ideal para compartilhar e que não pode ser facilmente editada", correct: true },
+                    { text: "O Word publica o arquivo na internet", correct: false },
+                    { text: "O Word apaga o seu .docx", correct: false }
+                ]
+            },
+            {
+                question: "O que é 'Mala Direta' (Mail Merge)?",
+                answers: [
+                    { text: "Enviar o documento por e-mail", correct: false },
+                    { text: "Uma ferramenta para criar cartas ou etiquetas personalizadas em massa (ex: 100 cartas, cada uma com um nome e endereço diferente)", correct: true },
+                    { text: "Corrigir o endereço do destinatário", correct: false },
+                    { text: "Uma caixa de entrada de e-mails dentro do Word", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve a ferramenta 'Localizar e Substituir' (Ctrl + U em PT-BR)?",
+                answers: [
+                    { text: "Apenas para localizar uma palavra", correct: false },
+                    { text: "Para procurar por uma palavra e trocá-la automaticamente por outra", correct: true },
+                    { text: "Para substituir a fonte do documento", correct: false },
+                    { text: "Para encontrar erros de ortografia", correct: false }
+                ]
+            },
+            {
+                question: "O que são 'Estilos' (ex: 'Título 1', 'Normal') na Guia Página Inicial?",
+                answers: [
+                    { text: "Temas de cores para o Word", correct: false },
+                    { text: "Conjuntos de formatação pré-definidos para aplicar rapidamente em títulos e parágrafos", correct: true },
+                    { text: "Diferentes tipos de WordArt", correct: false },
+                    { text: "Modelos de documentos prontos", correct: false }
+                ]
+            },
+            {
+                question: "Usar 'Estilos' (como Título 1, Título 2) ajuda a criar um...",
+                answers: [
+                    { text: "Sumário (Índice) automático", correct: true },
+                    { text: "Documento mais pesado (lento)", correct: false },
+                    { text: "Gráfico SmartArt", correct: false },
+                    { text: "PDF", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve a tecla 'Tab' (Tabulação) no início de um parágrafo?",
+                answers: [
+                    { text: "Para pular uma linha", correct: false },
+                    { text: "Para criar um espaço de recuo (parágrafo)", correct: true },
+                    { text: "Para apagar a palavra anterior", correct: false },
+                    { text: "Para centralizar o texto", correct: false }
+                ]
+            },
+            {
+                question: "O que significa 'Mesclar Células' em uma tabela?",
+                answers: [
+                    { text: "Dividir uma célula em duas", correct: false },
+                    { text: "Unir duas ou mais células para que virem uma só", correct: true },
+                    { text: "Pintar as células da mesma cor", correct: false },
+                    { text: "Apagar o conteúdo das células", correct: false }
+                ]
+            },
+            {
+                question: "Onde você encontra a opção para adicionar 'Bordas da Página' (uma borda decorativa ao redor da folha)?",
+                answers: [
+                    { text: "Guia 'Inserir' > 'Formas'", correct: false },
+                    { text: "Guia 'Revisão' > 'Bordas'", correct: false },
+                    { text: "Guia 'Design' > 'Bordas da Página'", correct: true },
+                    { text: "Clicando com o botão direito na margem", correct: false }
+                ]
+            },
+            {
+                question: "Para que serve o atalho 'Ctrl + Enter'?",
+                answers: [
+                    { text: "Criar um novo parágrafo", correct: false },
+                    { text: "Inserir uma 'Quebra de Página'", correct: true },
+                    { text: "Centralizar o texto", correct: false },
+                    { text: "Salvar o documento", correct: false }
+                ]
+            }
+        ];
+
+        // --- 2. ELEMENTOS DO DOM ---
+        const quizContainer = document.getElementById('quiz-container');
+        const questionArea = document.getElementById('question-area');
+        const questionText = document.getElementById('question-text');
+        const answerButtons = document.getElementById('answer-buttons');
+        const nextBtn = document.getElementById('next-btn');
+        const questionCounter = document.getElementById('question-counter');
+        
+        const resultsArea = document.getElementById('results-area');
+        const resultsTitle = document.getElementById('results-title');
+        const resultsText = document.getElementById('results-text');
+        const resultsImage = document.getElementById('results-image');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // --- 3. VARIÁVEIS DE ESTADO DO QUIZ ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // --- 4. FUNÇÕES PRINCIPAIS ---
+
+        /** Inicia o quiz ou reinicia ele */
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultsArea.classList.add('hidden');
+            questionArea.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            nextBtn.textContent = "Próxima \u2192"; // Seta para direita
+            document.querySelector('h1').classList.remove('hidden');
+            document.querySelector('p').classList.remove('hidden');
+            questionCounter.classList.remove('hidden');
+            // Embaralha as perguntas para ser diferente a cada tentativa
+            questions.sort(() => Math.random() - 0.5);
+            showQuestion();
+        }
+
+        /** Mostra a pergunta atual na tela */
+        function showQuestion() {
+            resetState();
+            let currentQuestion = questions[currentQuestionIndex];
+            let questionNo = currentQuestionIndex + 1;
+            
+            questionText.textContent = `${questionNo}. ${currentQuestion.question}`;
+            questionCounter.textContent = `Pergunta ${questionNo} de ${questions.length}`;
+
+            // Embaralha as respostas da pergunta atual
+            currentQuestion.answers.sort(() => Math.random() - 0.5);
+
+            currentQuestion.answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.innerHTML = answer.text;
+                button.classList.add('btn-answer', 'w-full', 'p-4', 'border-2', 'border-gray-600', 'rounded-lg', 'text-left', 'text-gray-200', 'font-semibold', 'transition-all', 'duration-200', 'hover:bg-gray-700', 'hover:border-lime-500', 'focus:outline-none', 'focus:ring-2', 'focus:ring-lime-500');
+                answerButtons.appendChild(button);
+
+                if (answer.correct) {
+                    button.dataset.correct = answer.correct;
+                }
+                button.addEventListener('click', selectAnswer);
+            });
+        }
+
+        /** Limpa o estado anterior (botões, classes) */
+        function resetState() {
+            nextBtn.classList.add('hidden');
+            while (answerButtons.firstChild) {
+                answerButtons.removeChild(answerButtons.firstChild);
+            }
+        }
+
+        /** Chamada quando uma resposta é clicada */
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            const isCorrect = selectedBtn.dataset.correct === 'true';
+
+            if (isCorrect) {
+                selectedBtn.classList.add('correct');
+                score++;
+            } else {
+                selectedBtn.classList.add('incorrect');
+            }
+
+            // Mostra qual era a correta (caso o usuário erre)
+            Array.from(answerButtons.children).forEach(button => {
+                if (button.dataset.correct === 'true') {
+                    button.classList.add('correct');
+                }
+                // Desabilita todos os botões
+                button.disabled = true;
+                button.classList.remove('hover:bg-gray-700', 'hover:border-lime-500');
+            });
+
+            // Prepara o botão "Próxima"
+            if (questions.length > currentQuestionIndex + 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                nextBtn.textContent = "Ver Resultados";
+                nextBtn.classList.remove('hidden');
+            }
+        }
+
+        /** Mostra a tela de resultados finais */
+        function showResults() {
+            questionArea.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            questionCounter.classList.add('hidden');
+            document.querySelector('h1').classList.add('hidden');
+            document.querySelector('p').classList.add('hidden');
+
+            resultsArea.classList.remove('hidden');
+            
+            resultsText.textContent = `Você acertou ${score} de ${questions.length} perguntas!`;
+
+            let title = "";
+            let imageText = "";
+
+            if (score === questions.length) {
+                title = "PERFEITO! 🤩";
+                imageText = "Expert+no+Word!";
+            } else if (score >= questions.length * 0.7) {
+                title = "Mandou Bem! 👍";
+                imageText = "Quase+l%C3%A1!";
+            } else if (score >= questions.length * 0.5) {
+                title = "Nada Mal!";
+                imageText = "Continue+Praticando!";
+            } else {
+                title = "Ops... 😅";
+                imageText = "Tente+de+Novo!";
+            }
+
+            resultsTitle.textContent = title;
+            resultsImage.src = `https://placehold.co/300x200/000000/84CC16?text=${imageText}`;
+        }
+
+        /** Passa para a próxima pergunta ou mostra os resultados */
+        function handleNextButton() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // --- 5. EVENT LISTENERS ---
+        nextBtn.addEventListener('click', handleNextButton);
+        restartBtn.addEventListener('click', startQuiz);
+
+        // --- INICIAR O QUIZ QUANDO A PÁGINA CARREGAR ---
+        startQuiz();
+
+    </script>
+</body>
+</html>
+
